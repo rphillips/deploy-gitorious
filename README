@@ -1,0 +1,7 @@
+Install
+-------
+
+# virtualenv --distribute --no-site-packages env
+# pip install -E env -r requirements.txt
+# source env/bin/activate
+# fab deploy

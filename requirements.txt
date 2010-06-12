@@ -1,0 +1,4 @@
+Fabric==0.9.1
+distribute==0.6.10
+pycrypto==2.1.0
+wsgiref==0.1.2
