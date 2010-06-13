@@ -17,7 +17,8 @@ Apache License
 Tested On
 ---------
 
-Ubuntu Server 10.04
+- Ubuntu Server 10.04
+- EC2 - Ubuntu 10.04 - http://alestic.com/
 
 Install Fabric
 --------------
