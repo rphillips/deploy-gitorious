@@ -95,31 +95,31 @@ def configs():
     gitorious.write(gitorious_tmpl.substitute(TEMPLATE_DICT))
     gitorious.close()
     put('configs/gitorious.yml', '~')
-    sudo("mv gitorious.yml  /var/www/%s/gitorious/config/" % SITE_NAME)
+    sudo("mv gitorious.yml  /var/www/%s/gitorious/config/" % TEMPLATE_DICT['SITE_NAME'])
 
     put('configs/database.yml', '~')
-    sudo("mv database.yml  /var/www/%s/gitorious/config/" % SITE_NAME)
+    sudo("mv database.yml  /var/www/%s/gitorious/config/" % TEMPLATE_DICT['SITE_NAME'])
 
 def install_gitorious():
     sudo('groupadd gitorious || true')
     sudo("usermod -a -G gitorious %s || true" % env.user)
-    sudo("mkdir -p /var/www/%s" % SITE_NAME)
-    sudo("chown %s:gitorious /var/www/%s" % (env.user, SITE_NAME))
-    sudo("chmod -R g+sw /var/www/%s" % SITE_NAME)
-    run("cd /var/www/%s ; mkdir -p log conf" % SITE_NAME)
-    run("cd /var/www/%s ; git clone git://gitorious.org/gitorious/mainline.git gitorious" % SITE_NAME)
-    run("cd /var/www/%s/gitorious ; rm -f public/.htaccess" % SITE_NAME)
-    run("cd /var/www/%s/gitorious ; mkdir -p tmp/pids" % SITE_NAME)
-    run("cd /var/www/%s/gitorious ; chmod ug+x script/*" % SITE_NAME)
-    run("cd /var/www/%s/gitorious ; chmod -R g+w config/ log/ public/ tmp/" % SITE_NAME)
-    sudo("ln -sfn /var/www/%s/gitorious/script/gitorious /usr/local/bin/gitorious" % SITE_NAME)
-    sudo("ln -sfn /var/www/%s/gitorious/doc/templates/ubuntu/git-ultrasphinx /etc/init.d/git-ultrasphinx" % SITE_NAME)
-    sudo("ln -sfn /var/www/%s/gitorious/doc/templates/ubuntu/git-daemon /etc/init.d/git-daemon" % SITE_NAME)
+    sudo("mkdir -p /var/www/%s" % TEMPLATE_DICT['SITE_NAME'])
+    sudo("chown %s:gitorious /var/www/%s" % (env.user, TEMPLATE_DICT['SITE_NAME']))
+    sudo("chmod -R g+sw /var/www/%s" % TEMPLATE_DICT['SITE_NAME'])
+    run("cd /var/www/%s ; mkdir -p log conf" % TEMPLATE_DICT['SITE_NAME'])
+    run("cd /var/www/%s ; git clone git://gitorious.org/gitorious/mainline.git gitorious" % TEMPLATE_DICT['SITE_NAME'])
+    run("cd /var/www/%s/gitorious ; rm -f public/.htaccess" % TEMPLATE_DICT['SITE_NAME'])
+    run("cd /var/www/%s/gitorious ; mkdir -p tmp/pids" % TEMPLATE_DICT['SITE_NAME'])
+    run("cd /var/www/%s/gitorious ; chmod ug+x script/*" % TEMPLATE_DICT['SITE_NAME'])
+    run("cd /var/www/%s/gitorious ; chmod -R g+w config/ log/ public/ tmp/" % TEMPLATE_DICT['SITE_NAME'])
+    sudo("ln -sfn /var/www/%s/gitorious/script/gitorious /usr/local/bin/gitorious" % TEMPLATE_DICT['SITE_NAME'])
+    sudo("ln -sfn /var/www/%s/gitorious/doc/templates/ubuntu/git-ultrasphinx /etc/init.d/git-ultrasphinx" % TEMPLATE_DICT['SITE_NAME'])
+    sudo("ln -sfn /var/www/%s/gitorious/doc/templates/ubuntu/git-daemon /etc/init.d/git-daemon" % TEMPLATE_DICT['SITE_NAME'])
     sudo('chmod +x /etc/init.d/git-ultrasphinx')
     sudo('chmod +x /etc/init.d/git-daemon')
-    sudo("sed -i s:PID_FILE=.*:PID_FILE=\"/var/www/%s/gitorious/db/sphinx/log/searchd.pid\":g /etc/init.d/git-ultrasphinx" % SITE_NAME)
-    sudo("sed -i s:PID_FILE=.*:PID_FILE=\"/var/www/%s/gitorious/log/git-daemon.pid\":g /etc/init.d/git-daemon" % SITE_NAME)
-    sudo("sed -i s:GIT_DAEMON=.*:GIT_DAEMON=\"/usr/bin/ruby /var/www/%s/gitorious/script/git-daemon -d:g\" /etc/init.d/git-daemon" % SITE_NAME)
+    sudo("sed -i s:PID_FILE=.*:PID_FILE=\"/var/www/%s/gitorious/db/sphinx/log/searchd.pid\":g /etc/init.d/git-ultrasphinx" % TEMPLATE_DICT['SITE_NAME'])
+    sudo("sed -i s:PID_FILE=.*:PID_FILE=\"/var/www/%s/gitorious/log/git-daemon.pid\":g /etc/init.d/git-daemon" % TEMPLATE_DICT['SITE_NAME'])
+    sudo("sed -i s:GIT_DAEMON=.*:GIT_DAEMON=\"/usr/bin/ruby /var/www/%s/gitorious/script/git-daemon -d:g\" /etc/init.d/git-daemon" % TEMPLATE_DICT['SITE_NAME'])
     sudo('update-rc.d -f git-daemon start 99 2 3 4 5 .')
     sudo('update-rc.d -f git-ultrasphinx start 99 2 3 4 5 .')
 
@@ -137,13 +137,13 @@ def create_git_user():
     sudo('touch /home/git/.ssh/authorized_keys', user='git')
 
 def migrate_database():
-    sudo("cd /var/www/%s/gitorious ; sudo rake gems:install" % SITE_NAME)
-    sudo("cd /var/www/%s/gitorious ; rake db:migrate RAILS_ENV=production" % SITE_NAME)
+    sudo("cd /var/www/%s/gitorious ; sudo rake gems:install" % TEMPLATE_DICT['SITE_NAME'])
+    sudo("cd /var/www/%s/gitorious ; rake db:migrate RAILS_ENV=production" % TEMPLATE_DICT['SITE_NAME'])
 
 def permissions():
-    sudo("cd /var/www/%s/gitorious ; chown -R git:gitorious config/environment.rb script/poller log tmp " % SITE_NAME)
-    sudo("cd /var/www/%s/gitorious ; chmod -R g+w config/environment.rb script/poller log tmp" % SITE_NAME)
-    sudo("cd /var/www/%s/gitorious ; chmod ug+x script/poller" % SITE_NAME)
+    sudo("cd /var/www/%s/gitorious ; chown -R git:gitorious config/environment.rb script/poller log tmp " % TEMPLATE_DICT['SITE_NAME'])
+    sudo("cd /var/www/%s/gitorious ; chmod -R g+w config/environment.rb script/poller log tmp" % TEMPLATE_DICT['SITE_NAME'])
+    sudo("cd /var/www/%s/gitorious ; chmod ug+x script/poller" % TEMPLATE_DICT['SITE_NAME'])
     
 def setup_apache():
     sudo('gem install passenger')
@@ -156,14 +156,14 @@ def setup_apache():
     sudo('a2enmod ssl')
     from string import Template
     conf_tmpl = Template(open('configs/vhost.conf.tmpl', 'r').read())
-    conf = open("configs/%s.conf" % SITE_NAME, 'w')
+    conf = open("configs/%s.conf" % TEMPLATE_DICT['SITE_NAME'], 'w')
     conf.write(conf_tmpl.substitute(TEMPLATE_DICT))
     conf.close()
-    put("configs/%s.conf" % SITE_NAME, '~')
-    sudo("mv %s.conf /var/www/%s/conf/vhost.conf" % (SITE_NAME, SITE_NAME))
+    put("configs/%s.conf" % TEMPLATE_DICT['SITE_NAME'], '~')
+    sudo("mv %s.conf /var/www/%s/conf/vhost.conf" % (TEMPLATE_DICT['SITE_NAME'], TEMPLATE_DICT['SITE_NAME']))
     sudo("ln -sfn /var/www/%s/conf/vhost.conf /etc/apache2/sites-available/%s" 
-            % (SITE_NAME, SITE_NAME))
-    sudo("a2ensite %s" % SITE_NAME)
+            % (TEMPLATE_DICT['SITE_NAME'], TEMPLATE_DICT['SITE_NAME']))
+    sudo("a2ensite %s" % TEMPLATE_DICT['SITE_NAME'])
 
 def start():
     sudo('/etc/init.d/activemq start')
