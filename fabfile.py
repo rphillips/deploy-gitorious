@@ -36,7 +36,7 @@ def install_packages():
 
 def install_mysql():
     # http://www.muhuk.com/2010/05/how-to-install-mysql-with-fabric/
-    mysql_password = prompt('Please enter MySQL root password:')
+    mysql_password = TEMPLATE_DICT['DB_PASSWORD']
     sudo('echo "mysql-server-5.1 mysql-server/root_password password ' \
             '%s" | debconf-set-selections' % mysql_password)
     sudo('echo "mysql-server-5.1 mysql-server/root_password_again password ' \
@@ -48,7 +48,7 @@ def install_mysql():
     from string import Template
     database_tmpl = Template(open('configs/database.yml.tmpl', 'r').read())
     database = open('configs/database.yml', 'w')
-    database.write(database.substitute(TEMPLATE_DICT))
+    database.write(database_tmpl.substitute(TEMPLATE_DICT))
     database.close()
 
 def install_rubygems():
