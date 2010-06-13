@@ -30,7 +30,28 @@ Run the deploy
 
 # fab -H hostname -u user deploy
 
+Connecting to your running gitorious
+------------------------------------
+
+1a. Setup DNS, or
+1b. edit /etc/hosts and add the IP and FQDN to your hosts file
+2. Browse to the FQDN
+
 Setting up your first user
 --------------------------
 
+ssh to the server
+cd /var/www/[SITE_NAME]/gitorious
+env RAILS_ENV=production ruby script/create_admin
+script/console
+> user = User.first
+> user.login = "username" # Change to your desired username
+> user.activate
+> user.accept_terms
+> user.save
 
+Email setup
+-----------
+
+Google for a howto on setting up email. Gitorious is setup to use a sendmail
+compatible server... Postfix works.
