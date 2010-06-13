@@ -1,6 +1,11 @@
 from fabric.api import *
 
 SITE_NAME = 'git.example.com'
+SITE_EMAIL = 'admin@example.com'
+
+TEMPLATE_DICT = {}
+TEMPLATE_DICT['SITE_NAME'] = SITE_NAME
+TEMPLATE_DICT['SITE_EMAIL'] = SITE_EMAIL
 
 # core packages
 PACKAGES = """
@@ -75,6 +80,16 @@ def configs():
     sudo('chmod +x /etc/init.d/activemq')
     sudo('mv activemq.xml /usr/local/apache-activemq-5.2.0/conf/activemq.xml')
     sudo('update-rc.d memcached defaults')
+
+    from string import Template
+    gitorious_tmpl = Template(open('configs/gitorious.yml.tmpl', 'r').read())
+    gitorious = open('configs/gitorious.yml', 'w')
+    gitorious.write(gitorious_tmpl.substitute(TEMPLATE_DICT))
+    gitorious.close()
+    put('configs/gitorious.yml', '~')
+    sudo("mv gitorious.yml  /var/www/%s/gitorious/config/" % SITE_NAME)
+    put('configs/database.yml', '~')
+    sudo("mv database.yml  /var/www/%s/gitorious/config/" % SITE_NAME)
 
 def install_gitorious():
     sudo('groupadd gitorious || true')
