@@ -162,7 +162,6 @@ def setup_apache():
 
 def start():
     sudo('/etc/init.d/activemq start')
-    sudo('env RAILS_ENV=production /etc/init.d/git-daemon start')
     sudo('/etc/init.d/apache2 restart')
 
 def deploy():

@@ -1,7 +1,36 @@
-Install
--------
+Install Fabric
+--------------
 
 # virtualenv --distribute --no-site-packages env
 # pip install -E env -r requirements.txt
 # source env/bin/activate
-# fab deploy
+
+Prerequisites
+-------------
+
+1. An ssh key pushed to a server for a user
+2. The user on the server must have NOPASSWD: ALL set in the /etc/sudoers file
+   to ignore the password prompt for sudo.
+
+Setting up SITE_NAME and SITE_EMAIL
+-----------------------------------
+
+edit fabfile.py change the SITE_NAME to a reasonable FQDN. In addition, make
+sure to setup your email address in SITE_EMAIL.
+
+Setup database.yml
+------------------
+
+The database.yml file needs to know your database password. The `fab deploy`
+command will prompt you for a password. Make sure both of these passwords
+match.
+
+Run the deploy
+--------------
+
+# fab -H hostname -u user deploy
+
+Setting up your first user
+--------------------------
+
+
