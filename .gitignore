@@ -1,3 +1,6 @@
 gitorious.yml
 *.pyc
 *.swp
+env
+configs/database.yml
+configs/git.example.com.conf
