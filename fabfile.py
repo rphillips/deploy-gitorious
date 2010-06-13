@@ -1,11 +1,10 @@
 from fabric.api import *
 
-SITE_NAME = 'git.example.com'
-SITE_EMAIL = 'admin@example.com'
-
-TEMPLATE_DICT = {}
-TEMPLATE_DICT['SITE_NAME'] = SITE_NAME
-TEMPLATE_DICT['SITE_EMAIL'] = SITE_EMAIL
+TEMPLATE_DICT = {
+    'SITE_NAME' : 'git.example.com',
+    'SITE_EMAIL' : 'admin@exampe.com',
+    'DB_PASSWORD' : 'admin'
+}
 
 # core packages
 PACKAGES = """ 
@@ -45,6 +44,12 @@ def install_mysql():
     aptitude_install('mysql-server-5.1 mysql-client-5.1 libmysqlclient15-dev')
     put('configs/database.sql', '~')
     sudo('mysql -u root --password=\'%s\' < ~/database.sql' % mysql_password)
+
+    from string import Template
+    database_tmpl = Template(open('configs/database.yml.tmpl', 'r').read())
+    database = open('configs/database.yml', 'w')
+    database.write(database.substitute(TEMPLATE_DICT))
+    database.close()
 
 def install_rubygems():
     run('mkdir -p src')
