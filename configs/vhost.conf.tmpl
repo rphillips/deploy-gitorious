@@ -1,0 +1,83 @@
+LoadModule passenger_module /usr/lib/ruby/gems/1.8/gems/passenger-2.2.14/ext/apache2/mod_passenger.so
+PassengerRoot /usr/lib/ruby/gems/1.8/gems/passenger-2.2.14
+PassengerRuby /usr/bin/ruby
+
+<VirtualHost *:80>
+    <Directory /var/www/$SITE_NAME/gitorious/public>
+        Options FollowSymLinks
+        AllowOverride None
+        Order allow,deny
+        Allow from All
+    </Directory>
+
+    DocumentRoot /var/www/$SITE_NAME/gitorious/public
+    ServerName $SITE_NAME
+
+    ErrorLog /var/www/$SITE_NAME/log/error.log
+    CustomLog /var/www/$SITE_NAME/log/access.log combined
+
+    # Gzip/Deflate
+    # http://fluxura.com/2006/5/19/apache-for-static-and-mongrel-for-rails-with-mod_deflate-and-capistrano-support
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/javascript text/css application/x-javascript
+    BrowserMatch ^Mozilla/4 gzip-only-text/html
+    BrowserMatch ^Mozilla/4\.0[678] no-gzip
+    BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+
+    # Far future expires date
+    <FilesMatch "\.(ico|pdf|flv|jpg|jpeg|png|gif|js|css|swf)$$">
+        ExpiresActive On
+        ExpiresDefault "access plus 1 year"
+    </FilesMatch>
+
+    # No Etags
+    FileETag None
+
+    RewriteEngine On
+
+    # Check for maintenance file and redirect all requests
+    RewriteCond %{DOCUMENT_ROOT}/system/maintenance.html -f
+    RewriteCond %{SCRIPT_FILENAME} !maintenance.html
+    RewriteRule ^.*$$ /system/maintenance.html [L]
+</VirtualHost>
+
+<VirtualHost *:443>
+    <Directory /var/www/$SITE_NAME/gitorious/public>
+        Options FollowSymLinks
+        AllowOverride None
+        Order allow,deny
+        Allow from All
+    </Directory>
+
+    DocumentRoot /var/www/$SITE_NAME/gitorious/public
+    ServerName $SITE_NAME
+
+    ErrorLog /var/www/$SITE_NAME/log/error.log
+    CustomLog /var/www/$SITE_NAME/log/access.log combined
+
+    SSLEngine On
+    SSLCertificateFile /etc/ssl/certs/ssl-cert-snakeoil.pem
+    SSLCertificateKeyFile /etc/ssl/private/ssl-cert-snakeoil.key
+
+    # Gzip/Deflate
+    # http://fluxura.com/2006/5/19/apache-for-static-and-mongrel-for-rails-with-mod_deflate-and-capistrano-support
+    AddOutputFilterByType DEFLATE text/html text/plain text/xml text/javascript text/css application/x-javascript
+    BrowserMatch ^Mozilla/4 gzip-only-text/html
+    BrowserMatch ^Mozilla/4\.0[678] no-gzip
+    BrowserMatch \bMSIE !no-gzip !gzip-only-text/html
+
+    # Far future expires date
+    <FilesMatch "\.(ico|pdf|flv|jpg|jpeg|png|gif|js|css|swf)$$">
+        ExpiresActive On
+        ExpiresDefault "access plus 1 year"
+    </FilesMatch>
+
+    # No Etags
+    FileETag None
+
+    RewriteEngine On
+
+    # Check for maintenance file and redirect all requests
+    RewriteCond %{DOCUMENT_ROOT}/system/maintenance.html -f
+    RewriteCond %{SCRIPT_FILENAME} !maintenance.html
+    RewriteRule ^.*$$ /system/maintenance.html [L]
+</VirtualHost>

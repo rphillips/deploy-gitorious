@@ -8,28 +8,31 @@ TEMPLATE_DICT['SITE_NAME'] = SITE_NAME
 TEMPLATE_DICT['SITE_EMAIL'] = SITE_EMAIL
 
 # core packages
-PACKAGES = """
-    git-core git-svn build-essential libpcre3 libpcre3-dev apg make zlib1g
-    zlib1g-dev ssh ruby1.8 libbluecloth-ruby libopenssl-ruby1.8 ruby1.8-dev ri
-    rdoc irb libonig-dev libyaml-dev geoip-bin libgeoip-dev libgeoip1
-    imagemagick libmagickwand-dev memcached apache2 uuid uuid-dev openjdk-6-jre
-"""
+PACKAGES = """ 
+    git-core git-svn build-essential libpcre3 libpcre3-dev apg make zlib1g \
+    zlib1g-dev ssh ruby1.8 libbluecloth-ruby libopenssl-ruby1.8 ruby1.8-dev ri \
+    rdoc irb libonig-dev libyaml-dev geoip-bin libgeoip-dev libgeoip1 \
+    imagemagick libmagickwand-dev memcached apache2 uuid uuid-dev openjdk-6-jre \
+""".strip()
 
-GEMS = """
-    rails mongrel mime-types textpow chronic
-    ruby-hmac daemons mime-types oniguruma textpow chronic BlueCloth
-    ruby-yadis ruby-openid geoip rspec rspec-rails RedCloth echoe
-    mysql rmagick 
-"""
+GEMS = """ 
+    rails mongrel mime-types textpow chronic \
+    ruby-hmac daemons mime-types oniguruma textpow chronic BlueCloth \
+    ruby-yadis ruby-openid geoip rspec rspec-rails RedCloth echoe \
+    mysql rmagick  \
+""".strip()
 
-def aptitude(*packages):
+def aptitude_install(*packages):
     sudo('DEBIAN_FRONTEND=noninteractive aptitude -y install %s' % ' '.join(packages), shell=False)
+
+def gem(*packages):
+    sudo("gem install --no-ri --no-rdoc %s" % (' '.join(packages)))
 
 def download_packages():
     sudo("aptitude install -d -y %s" % ' '.join(PACKAGES.split()))
 
 def install_packages():
-    aptitude(' '.join(PACKAGES.split()))
+    aptitude_install(' '.join(PACKAGES.split()))
     sudo('ln -sfn /usr/bin/ruby1.8 /usr/bin/ruby')
 
 def install_mysql():
@@ -39,7 +42,9 @@ def install_mysql():
             '%s" | debconf-set-selections' % mysql_password)
     sudo('echo "mysql-server-5.1 mysql-server/root_password_again password ' \
             '%s" | debconf-set-selections' % mysql_password)
-    aptitude('mysql-server-5.1 mysql-client-5.1 libmysqlclient15-dev')
+    aptitude_install('mysql-server-5.1 mysql-client-5.1 libmysqlclient15-dev')
+    put('configs/database.sql', '~')
+    sudo('mysql -u root --password=\'%s\' < ~/database.sql' % mysql_password)
 
 def install_rubygems():
     run('mkdir -p src')
@@ -48,11 +53,9 @@ def install_rubygems():
     run('cd src/rubygems-1.3.5 ; sudo ruby setup.rb')
     sudo('ln -sfn /usr/bin/gem1.8 /usr/bin/gem')
 
-def gem(*packages):
-    sudo("gem install --no-ri --no-rdoc %s" % (' '.join(packages)))
-
 def install_gems():
     gem(GEMS)
+    sudo('gem install rack -v=1.0.1')
 
 def install_sphinx():
     run('mkdir -p src')
@@ -88,6 +91,7 @@ def configs():
     gitorious.close()
     put('configs/gitorious.yml', '~')
     sudo("mv gitorious.yml  /var/www/%s/gitorious/config/" % SITE_NAME)
+
     put('configs/database.yml', '~')
     sudo("mv database.yml  /var/www/%s/gitorious/config/" % SITE_NAME)
 
@@ -117,14 +121,49 @@ def install_gitorious():
 def create_git_user():
     sudo('adduser --system git')
     sudo('usermod -a -G gitorious git')
-    sudo('mkdir /var/git')
-    sudo('mkdir /var/git/repositories')
-    sudo('mkdir /var/git/tarballs')
-    sudo('mkdir /var/git/tarball-work')
+    sudo('mkdir -p /var/git')
+    sudo('mkdir -p /var/git/repositories')
+    sudo('mkdir -p /var/git/tarballs')
+    sudo('mkdir -p /var/git/tarball-work')
+    sudo('mkdir -p /home/git/repositories', user='git')
     sudo('chown -R git:gitorious /var/git')
     sudo('mkdir -p /home/git/.ssh', user='git')
     sudo('chmod 700 /home/git/.ssh', user='git')
     sudo('touch /home/git/.ssh/authorized_keys', user='git')
+
+def migrate_database():
+    sudo("cd /var/www/%s/gitorious ; sudo rake gems:install" % SITE_NAME)
+    sudo("cd /var/www/%s/gitorious ; rake db:migrate RAILS_ENV=production" % SITE_NAME)
+
+def permissions():
+    sudo("cd /var/www/%s/gitorious ; chown -R git:gitorious config/environment.rb script/poller log tmp " % SITE_NAME)
+    sudo("cd /var/www/%s/gitorious ; chmod -R g+w config/environment.rb script/poller log tmp" % SITE_NAME)
+    sudo("cd /var/www/%s/gitorious ; chmod ug+x script/poller" % SITE_NAME)
+    
+def setup_apache():
+    sudo('gem install passenger')
+    aptitude_install('apache2-prefork-dev')
+    sudo('passenger-install-apache2-module -a')
+    sudo('a2enmod rewrite')
+    sudo('a2enmod deflate')
+    sudo('a2enmod expires')
+    sudo('a2enmod rewrite')
+    sudo('a2enmod ssl')
+    from string import Template
+    conf_tmpl = Template(open('configs/vhost.conf.tmpl', 'r').read())
+    conf = open("configs/%s.conf" % SITE_NAME, 'w')
+    conf.write(conf_tmpl.substitute(TEMPLATE_DICT))
+    conf.close()
+    put("configs/%s.conf" % SITE_NAME, '~')
+    sudo("mv %s.conf /var/www/%s/conf/vhost.conf" % (SITE_NAME, SITE_NAME))
+    sudo("ln -sfn /var/www/%s/conf/vhost.conf /etc/apache2/sites-available/%s" 
+            % (SITE_NAME, SITE_NAME))
+    sudo("a2ensite %s" % SITE_NAME)
+
+def start():
+    sudo('/etc/init.d/activemq start')
+    sudo('env RAILS_ENV=production /etc/init.d/git-daemon start')
+    sudo('/etc/init.d/apache2 restart')
 
 def deploy():
     download_packages()
@@ -137,3 +176,7 @@ def deploy():
     install_gitorious()
     create_git_user()
     configs()
+    migrate_database()
+    permissions()
+    setup_apache()
+    start()
